@@ -1,0 +1,23 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme_in_env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-log_pipeline}
+      MYSQL_USER: ${MYSQL_USER:-log_pipeline}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme_in_env}
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  redis_data:
+  mysql_data:

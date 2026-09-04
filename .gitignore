@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Logs / runtime
+*.log
+npm-debug.log*
+
+# Build output
+dist/
+build/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Anything regenerable from the source dataset shouldn't be committed either
+data/*.processed.json
