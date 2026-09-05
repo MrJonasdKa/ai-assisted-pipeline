@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { socket } from './socket.js';
 
 const MAX_FEED_ITEMS = 100;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 export default function App() {
   const [connected, setConnected] = useState(false);
   const [feed, setFeed] = useState([]);
   const [anomalies, setAnomalies] = useState([]);
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-  
+
   // WebSocket only tells you what happens *while connected* — it never
   // replays past events. So on load, backfill from the REST API (which
   // reads the durable MySQL data) before listening live for new events.
@@ -23,13 +23,18 @@ export default function App() {
         const anomalyRows = await anomaliesRes.json();
 
         setFeed(
-          logs.map((row) => ({
-            type: row.status === 'dead_letter' ? 'dead_letter' : 'processed',
-            rawLogId: row.id,
-            reason: row.status === 'dead_letter' ? 'schema validation failed' : undefined,
-            extracted: { event_category: row.event_category, severity: row.severity, summary: row.summary },
-            at: new Date(row.ingested_at).getTime(),
-          }))
+          logs
+            // Skip rows still in-flight (queued/processing) — they have no
+            // matching processed_logs row yet, so their fields would all be
+            // null. Only show items that actually reached a final state.
+            .filter((row) => row.status === 'done' || row.status === 'dead_letter')
+            .map((row) => ({
+              type: row.status === 'dead_letter' ? 'dead_letter' : 'processed',
+              rawLogId: row.id,
+              reason: row.status === 'dead_letter' ? 'schema validation failed' : undefined,
+              extracted: { event_category: row.event_category, severity: row.severity, summary: row.summary },
+              at: new Date(row.ingested_at).getTime(),
+            }))
         );
 
         setAnomalies(
@@ -61,12 +66,12 @@ export default function App() {
     function onDeadLetter(payload) {
       setFeed((prev) => [{ type: 'dead_letter', ...payload, at: Date.now() }, ...prev].slice(0, MAX_FEED_ITEMS));
     }
-  
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('log:processed', onProcessed);
     socket.on('log:dead_letter', onDeadLetter);
-  
+
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);

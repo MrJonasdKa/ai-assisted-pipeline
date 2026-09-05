@@ -18,8 +18,19 @@ const buckets = new Map(); // bucketKey -> { lastEventAt, n, mean, m2 }
 
 const MIN_SAMPLES_BEFORE_SCORING = 5; // don't flag anomalies until we have a baseline
 
+// LLM extraction isn't perfectly consistent call-to-call — e.g. Groq
+// sometimes returns "sshd" and sometimes "sshd(pam_unix)" for the exact
+// same raw line. Strip a trailing "(module)" annotation before bucketing
+// so the same real burst doesn't get silently split across two buckets
+// and never reach the sample threshold in either.
+function normalizeProcess(process) {
+  if (!process) return 'unknown';
+  const stripped = process.replace(/\([^)]*\)\s*$/, '').trim();
+  return stripped || 'unknown';
+}
+
 export function bucketKeyFor({ process, event_category, remote_host }) {
-  return [process ?? 'unknown', event_category, remote_host ?? 'none'].join('|');
+  return [normalizeProcess(process), event_category, remote_host ?? 'none'].join('|');
 }
 
 /**
