@@ -1,4 +1,4 @@
-import Groq from 'groq-sdk';
+import OpenAI from 'openai';
 import { config } from '../config/env.js';
 import { EVENT_CATEGORIES, SEVERITIES } from '../schema/logSchema.js';
 
@@ -8,16 +8,19 @@ function getClient() {
   if (!client) {
     if (!config.llm.apiKey) {
       throw new Error(
-        'LLM_API_KEY is not set. Get a free key at https://console.groq.com/keys ' +
+        'LLM_API_KEY is not set. Get a free key at https://openrouter.ai/keys ' +
           'and add it to backend/.env as LLM_API_KEY.'
       );
     }
-    client = new Groq({ apiKey: config.llm.apiKey });
+    client = new OpenAI({
+      apiKey: config.llm.apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
+    });
   }
   return client;
 }
 
-const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+const DEFAULT_MODEL = 'openrouter/free';
 
 const SYSTEM_PROMPT = `You are a log-parsing engine for raw Linux system log lines
 (format: "Mon DD HH:MM:SS host process[pid]: message"; note dates can be malformed,
@@ -42,7 +45,7 @@ async function callGroq(rawLines) {
   const groq = getClient();
   const numbered = rawLines.map((line, i) => `${i + 1}. ${line}`).join('\n');
 
-  const completion = await groq.chat.completions.create({
+  const completion = await client.chat.completions.create({
     model: config.llm.model || DEFAULT_MODEL,
     temperature: 0,
     response_format: { type: 'json_object' },
@@ -57,18 +60,18 @@ async function callGroq(rawLines) {
 
   const content = completion.choices?.[0]?.message?.content;
   if (!content) {
-    throw new Error('Groq returned an empty response');
+    throw new Error('LLM returned an empty response');
   }
 
   let parsed;
   try {
     parsed = JSON.parse(content);
   } catch (err) {
-    throw new Error(`Groq response was not valid JSON: ${err.message}`);
+    throw new Error(`LLM response was not valid JSON: ${err.message}`);
   }
 
   if (!Array.isArray(parsed.results)) {
-    throw new Error('Groq response JSON did not contain a "results" array');
+    throw new Error('LLM response JSON did not contain a "results" array');
   }
 
   return parsed.results;
