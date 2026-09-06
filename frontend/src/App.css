@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --paper: #f2efe1;
+  --paper-edge: #e8e4d2;
+  --greenbar: #dce8da;
+  --ink: #1c1b17;
+  --ink-faint: #6b6858;
+  --perforation: #b9b6a8;
+  --stamp-red: #8b2e1f;
+  --mustard: #8a6d1e;
+  --ok-green: #3f6b35;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #d8d4c4;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink);
+}
+
+.sheet {
+  max-width: 720px;
+  margin: 2.5rem auto;
+  background: var(--paper);
+  position: relative;
+  padding: 0 2.75rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* Sprocket holes running down both margins, like tractor-feed paper */
+.sheet::before,
+.sheet::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.75rem;
+  background-image: radial-gradient(circle, #b8b49f 0.22rem, transparent 0.23rem);
+  background-size: 100% 2.1rem;
+  background-position: center 1rem;
+  opacity: 0.65;
+}
+.sheet::before {
+  left: 0.35rem;
+}
+.sheet::after {
+  right: 0.35rem;
+}
+
+.masthead {
+  padding: 2.25rem 0 1.25rem;
+}
+
+.masthead h1 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.85rem;
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  color: var(--ink-faint);
+}
+
+.status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--stamp-red);
+  flex-shrink: 0;
+}
+.status-dot.connected {
+  background: var(--ok-green);
+}
+
+/* Perforated tear line between sections */
+.perforation {
+  border: none;
+  border-top: 2px dashed var(--perforation);
+  margin: 0;
+}
+
+section {
+  padding: 1.5rem 0;
+}
+
+section h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.empty-note {
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  font-style: italic;
+  line-height: 1.5;
+  max-width: 46ch;
+}
+
+/* Anomaly stamp — the one bold, memorable element */
+.stamp {
+  border: 2px solid var(--stamp-red);
+  color: var(--stamp-red);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.85rem;
+  transform: rotate(-0.6deg);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  animation: feed-in 0.35s ease-out;
+}
+.stamp:nth-child(even) {
+  transform: rotate(0.5deg);
+}
+
+.stamp-tag {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--stamp-red);
+  padding: 0.05rem 0.4rem;
+  margin-right: 0.5rem;
+}
+
+.stamp-detail {
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+/* Live feed rows — printout lines on greenbar bands */
+.feed-line {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  animation: feed-in 0.3s ease-out;
+}
+.feed-line:nth-child(odd) {
+  background: var(--greenbar);
+}
+
+.tag {
+  flex-shrink: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tag.info { color: var(--ink-faint); }
+.tag.warning { color: var(--mustard); }
+.tag.critical { color: var(--stamp-red); }
+.tag.failed { color: var(--stamp-red); }
+
+@keyframes feed-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp,
+  .feed-line {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sheet {
+    margin: 0;
+    padding: 0 1.5rem;
+  }
+}
+
+/* Session tally — styled like an adding-machine tape */
+.tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 0.9rem 1rem;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--paper),
+    var(--paper) 3px,
+    var(--paper-edge) 3px,
+    var(--paper-edge) 4px
+  );
+  border: 1px solid var(--perforation);
+  margin-bottom: 1.5rem;
+}
+
+.tally-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.tally-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.tally-label {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.chart-heading {
+  margin-top: 1.75rem;
+}
+
+/* Throughput strip chart */
+.throughput-chart {
+  width: 100%;
+  height: 90px;
+  display: block;
+}
+.throughput-area {
+  fill: var(--greenbar);
+  opacity: 0.9;
+}
+.throughput-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.75;
+}
+.throughput-anomaly-dot {
+  fill: var(--stamp-red);
+}
+
+/* Category bar chart */
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 8rem 1fr 2.25rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+}
+.bar-label {
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar-track {
+  height: 0.65rem;
+  background: var(--paper-edge);
+  position: relative;
+}
+.bar-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink) 0,
+    var(--ink) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  transition: width 0.4s ease-out;
+}
+.bar-count {
+  text-align: right;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 640px) {
+  .bar-row {
+    grid-template-columns: 6rem 1fr 2rem;
+  }
+}
