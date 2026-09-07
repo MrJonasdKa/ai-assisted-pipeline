@@ -22,14 +22,19 @@ export const extractedLogSchema = z.object({
   timestamp: z.string().nullable(),
   host: z.string().nullable(),
   process: z.string().nullable(),
-  pid: z.number().int().nullable(),
+  pid: z.union([z.null(), z.coerce.number().int()]),
   event_category: z.enum(EVENT_CATEGORIES),
   severity: z.enum(SEVERITIES),
   summary: z.string().min(1).max(500),
-  entities: z.object({
-    remote_host: z.string().nullable(),
-    user: z.string().nullable(),
-  }),
+  // Some model responses omit "entities" entirely when there's nothing to
+  // report, rather than sending {remote_host: null, user: null}. Default
+  // it instead of requiring the model to always include it explicitly.
+  entities: z
+    .object({
+      remote_host: z.string().nullable(),
+      user: z.string().nullable(),
+    })
+    .default({ remote_host: null, user: null }),
 });
 
 // A batch response is an array of extractions, one per input line, in order.
@@ -45,5 +50,8 @@ export function validateBatchExtraction(parsedJson) {
   if (result.success) {
     return { success: true, data: result.data };
   }
-  return { success: false, error: result.error.flatten() };
+  // .flatten() collapses nested paths down to just the top-level array
+  // index, hiding which field actually failed. .issues has the full
+  // path (e.g. [3, 'timestamp']) so we can actually see the real cause.
+  return { success: false, error: result.error.issues };
 }
